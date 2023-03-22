@@ -31,7 +31,7 @@ exports.getSchedule = async (req, res) => {
     }
 
     const fields = keys.reduce(
-      (object, key, i) => ({ ...object, [key]: req.body[key] }),
+      (object, key) => ({ ...object, [key]: req.body[key] }),
       {}
     );
 
@@ -51,17 +51,19 @@ exports.getSchedule = async (req, res) => {
       AND: [
         {
           ...filter,
+          OR: [
+            { time_from: { lte: fields?.time_to, gte: fields?.time_from } },
+            { time_to: { lte: fields?.time_to, gte: fields?.time_from } },
+          ],
         },
+
       ],
-      OR: [
-        { time_from: { lte: time_to, gte: time_from } },
-        { time_to: { lte: time_to, gte: time_from } },
-      ],
+
     };
-    if (!(time_to && time_from)) {
-      const { OR, ...result } = where;
-      where = result;
-    }
+    // if (!(time_to && time_from)) {
+    //   const { OR, ...result } = where;
+    //   where = result;
+    // }
     const schedules = await prisma.schedule.findMany({ where });
 
     server.sendResult(res, schedules);
